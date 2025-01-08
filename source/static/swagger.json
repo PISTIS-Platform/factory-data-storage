@@ -1,0 +1,1342 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Factory Data Storage",
+    "description": "\n[**Imprint**](https://xmanai-compliance-xmanai.apps.osc.fokus.fraunhofer.de/imprint)\n\n[**Protection of Data Privacy**](https://xmanai-compliance-xmanai.apps.osc.fokus.fraunhofer.de/privacy)\n\nThis API description includes all endpoints for accessing the Factory Data Storage that stores data in the form of structured tables as well as files. They are refered to as assets and all these assets are stored under a UUID, refered to as the **asset_uuid**.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://develop.pistis-market.eu/srv/factory-data-storage/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Storage for tables",
+      "description": "Access to the database that stores data in the form of tables"
+    },
+    {
+      "name": "Storage for files",
+      "description": "Access to the database that stores data in the form of files"
+    }
+  ],
+  "paths": {
+    "/api/tables/create_table": {
+      "post": {
+        "tags": [
+          "Storage for tables"
+        ],
+        "summary": "Store a dataset as a new table",
+        "description": "This endpoint is to create a dataset as a new table. The input body requires a ```JSON``` object with three main fields. The ```metadata``` field can be used to provide any available metadata of the table. For example, the name of the table can be provided with the key ```name```. Any other metadata of the table such as  ```description ``` can also be added to this dictionary. The metadata provided here can be stored in any other component responsible for storing the metadata of all datasets. The ```data_model``` field requires the names and datatypes of each of the columns of the table. This will be used to create the table in a PostgreSQL database. The ```data``` field contains the list of rows of the table. Once the table is injested into the database, the ```UUID``` of the table is returned to the user in the response.",
+        "operationId": "addAsset",
+        "requestBody": {
+          "description": "Metadata, data model and rows of data of the table",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Dataset_example"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Table created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "asset_uuid": {
+                      "type": "string",
+                      "example": "ae755a90-b7bc-4c28-bfc8-7a4fb247328b"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Table created"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Submitted data is not in the right format",
+            "content": {}
+          },
+          "403": {
+            "description": "User does not have access to this dataset table",
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/api/tables/add_rows": {
+      "put": {
+        "tags": [
+          "Storage for tables"
+        ],
+        "summary": "Add rows to an existing table",
+        "description": "This endpoint is to add rows to an existing table. This is also similar to the ```create_table``` request that it requires the ```data_model``` and ```data``` that needs to be inserted. Required input paramaters are, ```asset_uuid``` along with the new rows of the table.",
+        "operationId": "appendVersion",
+        "parameters": [
+          {
+            "name": "asset_uuid",
+            "in": "query",
+            "description": "Identifier of the table",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Data model and new rows of the table",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Dataset_returned"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Rows added",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "asset_uuid": {
+                      "type": "string",
+                      "example": "ae755a90-b7bc-4c28-bfc8-7a4fb247328b"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Rows added"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Submitted data is not in the right format",
+            "content": {}
+          },
+          "403": {
+            "description": "User does not have access to this table",
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/api/tables/get_table": {
+      "get": {
+        "tags": [
+          "Storage for tables"
+        ],
+        "summary": "Retrieve a table",
+        "description": "This endpoint is to retrieve the rows of data from a table. It require a query parameter ```asset uuid``` to identify the table. ",
+        "operationId": "getAssets",
+        "parameters": [
+          {
+            "name": "asset_uuid",
+            "in": "query",
+            "description": "Table identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "JSON_output",
+            "in": "query",
+            "description": "Select false if the table needs to be downloaded as a CSV file",
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "enum": [
+                true,
+                false
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All tables are found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Dataset_returned"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Submitted data is not in the right format",
+            "content": {}
+          },
+          "403": {
+            "description": "User does not have access to this table",
+            "content": {}
+          },
+          "404": {
+            "description": "One or several tables not found",
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/api/tables/get_all_tables": {
+      "get": {
+        "tags": [
+          "Storage for tables"
+        ],
+        "summary": "Get all table names",
+        "description": "This endpoint gives a list of all table names as UUIDs.. ",
+        "operationId": "getAllTables",
+        "responses": {
+          "200": {
+            "description": "All tables are found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "Table names": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      },
+                      "example": [
+                        "dd1ea3ce-d68d-416c-8c8f-f3a80572ea79",
+                        "ae755a90-b7bc-4c28-bfc8-7a4fb247328b"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Submitted data is not in the right format",
+            "content": {}
+          },
+          "403": {
+            "description": "User does not have access to this table",
+            "content": {}
+          },
+          "404": {
+            "description": "One or several tables not found",
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/api/tables/get_fields": {
+      "post": {
+        "tags": [
+          "Storage for tables"
+        ],
+        "summary": "Get some or all rows of a table",
+        "description": "Retrieve some rows of a table from the database. Body of this request can contain the required ```column_names``` along with specific values, if this is not required, the value can be kept ```null```. The results can be retrieved in a sorted format by specifying the query paramters ```sort_column``` and ```sort_type```. The results wil be a sorted result of the value in the ```sort_column``` parameter. For a more fine grained querying, SQL parameter such as ```DISTINCT```, ```OFFSET``` and ```LIMIT``` are also available.",
+        "operationId": "getFields",
+        "parameters": [
+          {
+            "name": "asset_uuid",
+            "in": "query",
+            "description": "Table identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "sort_column",
+            "in": "query",
+            "description": "Column for sorting",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort_type",
+            "in": "query",
+            "description": "Sorting type",
+            "schema": {
+              "type": "string",
+              "default": "desc",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "DISTINCT",
+            "in": "query",
+            "description": "Select true if distinct values need to be selected from the table",
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "enum": [
+                true,
+                false
+              ]
+            }
+          },
+          {
+            "name": "OFFSET",
+            "in": "query",
+            "description": "Offset value to select a set of values from the table",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "LIMIT",
+            "in": "query",
+            "description": "Limit value to select a set of values from the table",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Columns required from the table",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "column_names": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "example": "37535"
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "null"
+                      },
+                      "date": {
+                        "type": "string",
+                        "example": "2022-05-04T00:00:00.000Z"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Required rows found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "Data": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "example": [
+                          1,
+                          "Bob"
+                        ],
+                        "items": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Submitted data is not in the right format",
+            "content": {}
+          },
+          "403": {
+            "description": "User does not have access to this table",
+            "content": {}
+          },
+          "404": {
+            "description": "Table not found",
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/api/tables/count_values": {
+      "post": {
+        "tags": [
+          "Storage for tables"
+        ],
+        "summary": "Count the occurrences of values within a single column",
+        "description": "This endpoint is to get a count of specified values from the rows of a table. Body of the request can contain the required ```column_names``` along with the specific values, if this is not required, this value of can be kept as ```null```. The version of the table on to which this operation should be performed can be specified using the query parameter ```version_id```. If the ```version_id``` is not specified, this operation will query the latest version of the table.",
+        "operationId": "getCounts",
+        "parameters": [
+          {
+            "name": "asset_uuid",
+            "in": "query",
+            "description": "Table identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "version_id",
+            "in": "query",
+            "description": "Version of the asset",
+            "schema": {
+              "type": "string",
+              "default": "main"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Column names required from the table",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "column_names": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "example": "37535"
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "null"
+                      },
+                      "date": {
+                        "type": "string",
+                        "example": "2022-05-04T00:00:00.000Z"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Rows found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "Data": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "example": [
+                          1,
+                          "Bob"
+                        ],
+                        "items": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Submitted data is not in the right format",
+            "content": {}
+          },
+          "403": {
+            "description": "User does not have access to this table",
+            "content": {}
+          },
+          "404": {
+            "description": "Table not found",
+            "content": {}
+          }
+        },
+        "deprecated": true,
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/api/tables/count_rows": {
+      "get": {
+        "tags": [
+          "Storage for tables"
+        ],
+        "summary": "Count the number of rows in a table",
+        "description": "This request returns the row count of a table. Required query parameter is\n ```asset_uuid```.",
+        "operationId": "getrows",
+        "parameters": [
+          {
+            "name": "asset_uuid",
+            "in": "query",
+            "description": "Table identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Table found and row count calculated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "Number of rows": {
+                      "type": "string",
+                      "example": "100"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Submitted data is not in the right format",
+            "content": {}
+          },
+          "403": {
+            "description": "User does not have access to this table",
+            "content": {}
+          },
+          "404": {
+            "description": "Table not found",
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/api/tables/summary_statistics": {
+      "post": {
+        "tags": [
+          "Storage for tables"
+        ],
+        "summary": "Calculating summary statistics (min, max, Q1, Q2, Q3)",
+        "description": "This request calculates the summary statistics of a table using the ```MIN```, ```MAX```, ```Q1```, ```Q2``` and ```Q3``` values. Body of the request includes a list of ```column names```, ```asset_uuid``` of the table and the column name for the ```MIN/MAX``` value. If the ```version_id``` is not specified, this operation will query the latest version of the table.",
+        "operationId": "getStatistics",
+        "parameters": [
+          {
+            "name": "asset_uuid",
+            "in": "query",
+            "description": "Table identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "version_id",
+            "in": "query",
+            "description": "Version of the table",
+            "schema": {
+              "type": "string",
+              "default": "main"
+            }
+          },
+          {
+            "name": "MIN/MAX",
+            "in": "query",
+            "description": "Name of the column",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Column names",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "column_names": {
+                    "type": "array",
+                    "example": [
+                      "id",
+                      "name"
+                    ],
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Summary statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "Data": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "example": [
+                          1,
+                          "Bob"
+                        ],
+                        "items": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Submitted data is not in the right format",
+            "content": {}
+          },
+          "403": {
+            "description": "User does not have access to this table",
+            "content": {}
+          },
+          "404": {
+            "description": "Table not found",
+            "content": {}
+          }
+        },
+        "deprecated": true,
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/api/tables/delete_table": {
+      "delete": {
+        "tags": [
+          "Storage for tables"
+        ],
+        "summary": "Delete a table",
+        "description": "Delete an asset using its ```asset_uuid```. This request takes an asset uuid and deletes all of them from the database.",
+        "operationId": "deleteSeveral",
+        "parameters": [
+          {
+            "name": "asset_uuid",
+            "in": "query",
+            "description": "Table identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tables deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "asset_uuid": {
+                      "type": "string",
+                      "example": "ae755a90-b7bc-4c28-bfc8-7a4fb247328b"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Table and lineage information deleted"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Submitted data is not in the right format",
+            "content": {}
+          },
+          "403": {
+            "description": "User does not have access to this table",
+            "content": {}
+          },
+          "404": {
+            "description": "One or several tables not found",
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/api/files/create_file": {
+      "post": {
+        "tags": [
+          "Storage for files"
+        ],
+        "summary": "Create a new file",
+        "description": "This endpoint is to add a new file into the database or to create a new version of an existing file.",
+        "operationId": "addFile",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "file"
+                ],
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "description": "Upload the file",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "New file created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "asset_uuid": {
+                      "type": "string",
+                      "example": "ae755a90-b7bc-4c28-bfc8-7a4fb247328b"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "New file created"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "New version of the file created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "asset_uuid": {
+                      "type": "string",
+                      "example": "ae755a90-b7bc-4c28-bfc8-7a4fb247328b"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "New version of the file created"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid parameters",
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/api/files/update_file": {
+      "put": {
+        "tags": [
+          "Storage for files"
+        ],
+        "summary": "Update an existing file",
+        "description": "This endpoint is to replace an existing file using its ```asset_uuid```.",
+        "operationId": "updateFileVersion",
+        "parameters": [
+          {
+            "name": "asset_uuid",
+            "in": "query",
+            "description": "UUID of the file",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "file"
+                ],
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "description": "Upload file",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Version of the file updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "asset_uuid": {
+                      "type": "string",
+                      "example": "ae755a90-b7bc-4c28-bfc8-7a4fb247328b"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "File updated"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Submitted data is not in the right format",
+            "content": {}
+          },
+          "403": {
+            "description": "User does not have access to this file",
+            "content": {}
+          },
+          "404": {
+            "description": "File not found",
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/api/files/get_file": {
+      "get": {
+        "tags": [
+          "Storage for files"
+        ],
+        "summary": "Retrieve a file",
+        "description": "This endpoint returns a requested file using its ```asset_uuid```. The file is returned as a formdata parameter.",
+        "operationId": "getFile",
+        "parameters": [
+          {
+            "name": "asset_uuid",
+            "in": "query",
+            "description": "UUID of the file",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File returned",
+            "content": {
+              "application/txt": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary",
+                  "example": "source.csv"
+                }
+              },
+              "application/yaml": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary",
+                  "example": "source.csv"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid parameters",
+            "content": {}
+          },
+          "403": {
+            "description": "User does not have access to this file",
+            "content": {}
+          },
+          "404": {
+            "description": "File not found",
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/api/files/get_all_names": {
+      "get": {
+        "tags": [
+          "Storage for files"
+        ],
+        "summary": "Get the names and uuids of all files",
+        "description": "This request returns a list of the ```name``` and ```asset_uuid``` of all files present in the database.",
+        "operationId": "get_all_names",
+        "responses": {
+          "200": {
+            "description": "All files received",
+            "content": {
+              "application/txt": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "uuid": {
+                      "type": "string",
+                      "example": "ae755a90-b7bc-4c28-bfc8-7a4fb247328b"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "file.txt"
+                    }
+                  }
+                }
+              },
+              "application/yaml": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "uuid": {
+                      "type": "string",
+                      "example": "ae755a90-b7bc-4c28-bfc8-7a4fb247328b"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "file.txt"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid parameters",
+            "content": {}
+          },
+          "404": {
+            "description": "No files found",
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/api/files/rename_file": {
+      "put": {
+        "tags": [
+          "Storage for files"
+        ],
+        "summary": "Rename a file",
+        "description": "Rename a file using its ```asset_uuid```. The file name should be added along with its extension, if not, it will corrupt the file.",
+        "operationId": "renameFile",
+        "parameters": [
+          {
+            "name": "asset_uuid",
+            "in": "query",
+            "description": "UUID of the file",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "file_name",
+            "in": "query",
+            "description": "New name of the file",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File name changed",
+            "content": {
+              "application/txt": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "File name changed"
+                    }
+                  }
+                }
+              },
+              "application/yaml": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "File name changed"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid parameters",
+            "content": {}
+          },
+          "403": {
+            "description": "User does not have access to this file",
+            "content": {}
+          },
+          "404": {
+            "description": "File not found",
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    },
+    "/api/files/delete_file": {
+      "delete": {
+        "tags": [
+          "Storage for files"
+        ],
+        "summary": "Delete a file",
+        "description": "Delete a file using its ```asset_uuid```. This request takes an asset uuid and deletes the file from the database.",
+        "operationId": "deleteFile",
+        "parameters": [
+          {
+            "name": "asset_uuid",
+            "in": "query",
+            "description": "UUID of the file",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File deleted",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "asset_uuid": {
+                      "type": "string",
+                      "example": "ae755a90-b7bc-4c28-bfc8-7a4fb247328b"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "File deleted"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid parameters",
+            "content": {}
+          },
+          "403": {
+            "description": "User does not have access to this file",
+            "content": {}
+          },
+          "404": {
+            "description": "File not found",
+            "content": {}
+          }
+        },
+        "security": [
+          {
+            "key": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Dataset_example": {
+        "required": [
+          "data",
+          "data_model",
+          "metadata"
+        ],
+        "type": "object",
+        "properties": {
+          "metadata": {
+            "$ref": "#/components/schemas/Metadata_example"
+          },
+          "data_model": {
+            "required": [
+              "columns"
+            ],
+            "type": "object",
+            "properties": {
+              "columns": {
+                "type": "array",
+                "example": [
+                  {
+                    "name": "entry_id",
+                    "dataType": "Integer"
+                  },
+                  {
+                    "name": "age",
+                    "dataType": "Integer"
+                  },
+                  {
+                    "name": "name",
+                    "dataType": "String"
+                  },
+                  {
+                    "name": "sex",
+                    "dataType": "String"
+                  },
+                  {
+                    "name": "hiring_date",
+                    "dataType": "Date"
+                  }
+                ],
+                "items": {
+                  "$ref": "#/components/schemas/Data_model_example"
+                }
+              }
+            }
+          },
+          "data": {
+            "required": [
+              "rows"
+            ],
+            "type": "object",
+            "properties": {
+              "rows": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "example": [
+                    1,
+                    43,
+                    "Bob",
+                    "m",
+                    "2008.05.22"
+                  ],
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Dataset_returned": {
+        "required": [
+          "data",
+          "data_model"
+        ],
+        "type": "object",
+        "properties": {
+          "data_model": {
+            "required": [
+              "columns"
+            ],
+            "type": "object",
+            "properties": {
+              "columns": {
+                "type": "array",
+                "example": [
+                  {
+                    "name": "entry_id",
+                    "dataType": "Integer"
+                  },
+                  {
+                    "name": "age",
+                    "dataType": "Integer"
+                  },
+                  {
+                    "name": "name",
+                    "dataType": "String"
+                  },
+                  {
+                    "name": "sex",
+                    "dataType": "String"
+                  },
+                  {
+                    "name": "hiring_date",
+                    "dataType": "Date'"
+                  }
+                ],
+                "items": {
+                  "$ref": "#/components/schemas/Data_model_example"
+                }
+              }
+            }
+          },
+          "data": {
+            "required": [
+              "rows"
+            ],
+            "type": "object",
+            "properties": {
+              "rows": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "example": [
+                    1,
+                    43,
+                    "Bob",
+                    "m",
+                    "2008.05.22"
+                  ],
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Metadata_example": {
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "test_dataset123"
+          }
+        }
+      },
+      "Data_model_example": {
+        "required": [
+          "dataType",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "dataType": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "key": {
+        "type": "apiKey",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  },
+  "x-original-swagger-version": "2.0"
+}

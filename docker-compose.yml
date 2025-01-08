@@ -1,0 +1,45 @@
+
+version: '3.5'
+
+services:
+  api:
+    build: .
+    depends_on:
+      - database
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: docker
+      POSTGRES_HOST: database
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: tablestore
+      POSTGRES_DB_NEW: filestore
+
+    image: datastorage
+    container_name: datastorage
+    networks:
+      - default
+    ports:
+      - 8080:8080
+
+  database:
+    image: postgres:latest
+    container_name: postgres-datastorage
+    networks:
+      - default
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: docker
+      POSTGRES_HOST: database
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: tablestore
+      POSTGRES_DB_NEW: filestore
+    volumes:
+      - db_volume:/var/lib/postgresql
+      - ./factory-data-storage-api/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  db_volume:
+
+
