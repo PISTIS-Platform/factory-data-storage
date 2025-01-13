@@ -43,14 +43,6 @@ docker-compose up
 
 ```
 
-## Deployment
-
-***
-
-Deployment should be done using [Docker](https://www.docker.com/) containers. 
-Changes to the `master` and `develop` branch are deployed automatically.
-View the `.gitlab-ci.yml` file for details.
-
 ## Maintainer
 
 ***
