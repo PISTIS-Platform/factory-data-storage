@@ -1,6 +1,6 @@
-# PISTIS Factory Data Storage API
+# PISTIS Factory Data Storage
 
-The Factory Data Storage API is a service developed for PISTIS.
+The Factory Data Storage is a service developed for PISTIS. It provides storage and access to a Postgres database to perform CRUD operations on datasets. It is populated with raw datasets when a Job Confugurator executes the Data Registration workflow and later during the data enrichment process, these datasets are transformed into SQL tables with table schema conforming to properties from the PISTIS Data Model.
 
 ## Table of Contents
 
@@ -32,7 +32,7 @@ Not mandatory, but useful tools:
 1. Build docker image
 
 ```
-docker build -t assetstore .
+docker build -t datastorage .
 
 ```
 
